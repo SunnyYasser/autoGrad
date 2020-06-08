@@ -1,5 +1,5 @@
 import numpy as np 
-from typing import List, NamedTuple, Callable
+from typing import List, NamedTuple, Callable, Optional
 
 class Dependency(NamedTuple):
     tensor: 'Tensor'
@@ -7,31 +7,40 @@ class Dependency(NamedTuple):
 
 
 class Tensor:
-    """
-        keeps a track of the previous gradients
-    """
 
     def __init__(self,
                 data: np.ndarray,
                 requires_grad:bool = False,
-                depends_on: List[Dependency] = None) -> None:
+                depends_on: List[Dependency] = []) -> None:
 
-                self.data = data
-                self.requires_grad = requires_grad
-                self.depends_on = depends_on
-                self.shape = data.shape
+        self.data = data
+        self.requires_grad = requires_grad
+        self.depends_on = depends_on
+        self.shape = data.shape
+        self.grad: Optional['Tensor'] = None
+
+        if self.requires_grad:
+            self.zero_grad()
+        
 
     def __repr__(self) -> str:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
     
+    def zero_grad(self) -> None:
+        self.grad = Tensor(np.zeros_like(self.data))
+    
     def sum(self) -> 'Tensor':
         return tensor_sum(self)
 
-    def backward(self, grad:'Tensor') -> 'Tensor':
-        if self.requires_grad:
-            raise NotImplementedError
-        else
-            return None
+    def backward(self, grad:'Tensor') -> None:
+        assert self.requires_grad, "called backward on a non-required_grad tensor"
+
+        self.grad += grad.data
+        # will have to change later for more flexibility
+
+        for dependency in self.depends_on:
+            backward_grad = dependency.grad_fn(grad.data)
+            dependency.tensor.backward(Tensor(backward_grad))
 
 
 def tensor_sum(t: Tensor) -> Tensor:
@@ -55,7 +64,7 @@ def tensor_sum(t: Tensor) -> Tensor:
         depends_on = [Dependency(t, grad_fn)]
     
     else:
-        depends_on = None
+        depends_on = []
 
     return Tensor(data,requires_grad=requires_grad,depends_on=depends_on)
 
