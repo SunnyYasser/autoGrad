@@ -1,22 +1,37 @@
 import numpy as np 
-from typing import List, NamedTuple, Callable, Optional
+from typing import List, NamedTuple, Callable, Optional, Union
+
 
 class Dependency(NamedTuple):
     tensor: 'Tensor'
     grad_fn: Callable[[np.ndarray], np.ndarray]
 
+"""
+To make different data type handling easier
+"""
+
+Arrayable = Union[float, list, np.ndarray]
+
+def ensure_array(arrayable:Arrayable) -> np.ndarray:
+    if isinstance(arrayable, np.ndarray):
+        return arrayable
+    else:
+        return np.array(arrayable)
+
+
+
 
 class Tensor:
 
     def __init__(self,
-                data: np.ndarray,
+                data: Arrayable,
                 requires_grad:bool = False,
-                depends_on: List[Dependency] = []) -> None:
+                depends_on: List[Dependency] = None) -> None:
 
-        self.data = data
+        self.data = ensure_array(data)
         self.requires_grad = requires_grad
-        self.depends_on = depends_on
-        self.shape = data.shape
+        self.depends_on = depends_on or []
+        self.shape = self.data.shape
         self.grad: Optional['Tensor'] = None
 
         if self.requires_grad:
@@ -32,10 +47,17 @@ class Tensor:
     def sum(self) -> 'Tensor':
         return tensor_sum(self)
 
-    def backward(self, grad:'Tensor') -> None:
+    def backward(self, grad:'Tensor' = None) -> None:
         assert self.requires_grad, "called backward on a non-required_grad tensor"
 
-        self.grad += grad.data
+        if grad is None:
+            if self.shape == ():
+                grad = Tensor(1)
+            else:
+                raise RuntimeError("grad must be specified for non-0-tensor")
+
+
+        self.grad.data += grad.data
         # will have to change later for more flexibility
 
         for dependency in self.depends_on:
