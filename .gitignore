@@ -1,0 +1,4 @@
+.vscode
+.mypy_cache
+autograd/__pycache__
+tests/__pycache__
