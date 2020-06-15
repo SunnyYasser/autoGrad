@@ -68,9 +68,24 @@ class Tensor:
     def __rsub__(self, other) -> 'Tensor':
         return _sub(ensure_tensor(other), self)
 
+    def __iadd__(self, other) -> 'Tensor':
+        self.data += ensure_tensor(other).data
+        self.grad = None
+        return self
+
+    def __isub__(self, other) -> 'Tensor':
+        self.data -= ensure_tensor(other).data
+        self.grad = None
+        return self
+
+    def __imul__(self, other) -> 'Tensor':
+        self.data *= ensure_tensor(other).data
+        self.grad = None
+        return self
+
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data, dtype = np.float64))
-    
+
     def sum(self) -> 'Tensor':
         return tensor_sum(self)
 
@@ -87,7 +102,7 @@ class Tensor:
         # print("grad data", grad.data)
         # print("self.grad.data", self.grad.data)
 
-        self.grad.data += grad.data
+        self.grad.data += grad.data # type: ignore
         # will have to change later for more flexibility
 
         for dependency in self.depends_on:
