@@ -27,7 +27,7 @@ class TestTensorAdd(unittest.TestCase):
         t3.backward(tensor.Tensor([[1, 1, 1],[1, 1, 1]]))
         
         assert t3.data.shape == (2,3)
-
+        assert t3.data.tolist() == [[8, 10, 12],[11, 13, 15]]
         assert t1.grad.data.tolist() == [[1, 1, 1], [1, 1, 1]]
         assert t2.grad.data.tolist() == [2, 2, 2]
 
@@ -41,7 +41,7 @@ class TestTensorAdd(unittest.TestCase):
         t3.backward(tensor.Tensor([[1, 1, 1],[1, 1, 1]]))
         
         assert t3.data.shape == (2,3)
-
+        assert t3.data.tolist() == [[8, 10, 12],[11, 13, 15]]
         assert t1.grad.data.tolist() == [[1, 1, 1], [1, 1, 1]]
         assert t2.grad.data.tolist() == [[2, 2, 2]]
 

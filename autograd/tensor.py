@@ -50,8 +50,16 @@ class Tensor:
     def __add__(self, other) -> 'Tensor':
         return _add(self, ensure_tensor(other))
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> 'Tensor':
         return _add(ensure_tensor(other), self)
+
+    def __mul__(self, other) -> 'Tensor':
+        return _mul(self, ensure_tensor(other))
+    
+    def __rmul__(self, other) -> 'Tensor':
+        return _mul(ensure_tensor(other), self)
+
+
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data, dtype = np.float64))
@@ -151,7 +159,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
     
     return Tensor(data, requires_grad, depends_on)
 
-def mul(t1: Tensor, t2: Tensor) -> Tensor:
+def _mul(t1: Tensor, t2: Tensor) -> Tensor:
     """
     Takes two tensors and returns their product component wise
     """
