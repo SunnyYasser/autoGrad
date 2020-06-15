@@ -59,7 +59,14 @@ class Tensor:
     def __rmul__(self, other) -> 'Tensor':
         return _mul(ensure_tensor(other), self)
 
+    def __neg__(self) -> 'Tensor':
+        return _neg(self)
+    
+    def __sub__(self, other) -> 'Tensor':
+        return _sub(self, ensure_tensor(other))
 
+    def __rsub__(self, other) -> 'Tensor':
+        return _sub(ensure_tensor(other), self)
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data, dtype = np.float64))
@@ -204,7 +211,7 @@ def _mul(t1: Tensor, t2: Tensor) -> Tensor:
         depends_on.append(Dependency(t2,grad_fn2))
     return Tensor(data, requires_grad, depends_on)
 
-def negate(t: Tensor) -> Tensor:
+def _neg(t: Tensor) -> Tensor:
     data = -t.data
     required_grad = t.requires_grad
 
@@ -216,5 +223,5 @@ def negate(t: Tensor) -> Tensor:
 
     return Tensor(data, required_grad, depends_on)
 
-def sub(t1: Tensor, t2: Tensor) -> Tensor:
-    return _add(t1, negate(t2))
+def _sub(t1: Tensor, t2: Tensor) -> Tensor:
+    return t1 + (-t2)
