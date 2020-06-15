@@ -19,7 +19,13 @@ def ensure_array(arrayable:Arrayable) -> np.ndarray:
         return np.array(arrayable)
 
 
+Tensorable = Union['Tensor', float, np.ndarray, int]
 
+def ensure_tensor(tensorable: Tensorable) -> 'Tensor':
+    if isinstance(tensorable, Tensor):
+        return tensorable
+    else:
+        return Tensor(tensorable)
 
 class Tensor:
 
@@ -41,6 +47,12 @@ class Tensor:
     def __repr__(self) -> str:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
     
+    def __add__(self, other) -> 'Tensor':
+        return _add(self, ensure_tensor(other))
+
+    def __radd__(self, other):
+        return _add(ensure_tensor(other), self)
+
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data, dtype = np.float64))
     
@@ -93,7 +105,7 @@ def tensor_sum(t: Tensor) -> Tensor:
     return Tensor(data,requires_grad=requires_grad,depends_on=depends_on)
 
 
-def add(t1: Tensor, t2: Tensor) -> Tensor:
+def _add(t1: Tensor, t2: Tensor) -> Tensor:
     """
     Takes two tensors and returns their sum
     """
@@ -197,4 +209,4 @@ def negate(t: Tensor) -> Tensor:
     return Tensor(data, required_grad, depends_on)
 
 def sub(t1: Tensor, t2: Tensor) -> Tensor:
-    return add(t1, negate(t2))
+    return _add(t1, negate(t2))
