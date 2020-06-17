@@ -47,6 +47,9 @@ class Tensor:
     def __repr__(self) -> str:
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
     
+    def __getitem__(self, idxs) -> 'Tensor':
+        return _slice(self, idxs)
+    
     def __add__(self, other) -> 'Tensor':
         return _add(self, ensure_tensor(other))
 
@@ -67,6 +70,10 @@ class Tensor:
 
     def __rsub__(self, other) -> 'Tensor':
         return _sub(ensure_tensor(other), self)
+    
+    def __matmul__(self, other) -> 'Tensor':
+        return _matmul(self, other)
+
 
     def __iadd__(self, other) -> 'Tensor':
         self.data = self.data + ensure_tensor(other).data
@@ -246,3 +253,47 @@ def _neg(t: Tensor) -> Tensor:
 
 def _sub(t1: Tensor, t2: Tensor) -> Tensor:
     return t1 + (-t2)
+
+
+def _matmul(t1: Tensor, t2:Tensor) -> Tensor:
+    """
+        Takes two tensors and returns their matrix product
+
+    """
+    data = t1.data @ t2.data
+    requires_grad = t1.requires_grad or t2.requires_grad
+    depends_on: List[Dependency] = []
+    
+    if t1.requires_grad:
+
+        def grad_fn1(grad: np.ndarray) -> np.ndarray:
+            grad = grad @ t2.data.T
+            return grad
+        
+        depends_on.append(Dependency(t1,grad_fn1))
+
+    if t2.requires_grad:
+
+        def grad_fn2(grad: np.ndarray) -> np.ndarray:
+            grad = t1.data.T @ grad
+            return grad
+        
+        depends_on.append(Dependency(t2,grad_fn2))
+
+    return Tensor(data, requires_grad, depends_on)
+
+def _slice(t:Tensor, idxs) -> Tensor:
+    data = t.data[idxs]
+    requires_grad = t.requires_grad
+
+    if requires_grad:
+        def grad_fn(grad: np.ndarray) -> np.ndarray:
+            big_grad = np.zeros_like(data)
+            big_grad[idxs] = grad
+            return big_grad
+        
+        depends_on = Dependency(t,grad_fn)
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
