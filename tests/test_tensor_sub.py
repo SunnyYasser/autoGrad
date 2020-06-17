@@ -47,3 +47,14 @@ class TestTensorSub(unittest.TestCase):
 
 
 
+    def test_isub(self):
+        t1 = tensor.Tensor([[1., 2 ,3], [4, 5, 6]], requires_grad=True) #(2,3)
+        t2 = tensor.Tensor([[7, 8, 9]], requires_grad=True) #(1,3)
+
+        t1 -= t2
+        assert t1.data.shape == (2,3)
+        assert t1.grad is None
+        assert t1.data.tolist() == [[-6, -6, -6],[-3, -3, -3]]
+
+
+

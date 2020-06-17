@@ -34,7 +34,7 @@ class Tensor:
                 requires_grad:bool = False,
                 depends_on: List[Dependency] = None) -> None:
 
-        self.data = ensure_array(data)
+        self._data = ensure_array(data)
         self.requires_grad = requires_grad
         self.depends_on = depends_on or []
         self.shape = self.data.shape
@@ -69,19 +69,25 @@ class Tensor:
         return _sub(ensure_tensor(other), self)
 
     def __iadd__(self, other) -> 'Tensor':
-        self.data += ensure_tensor(other).data
-        self.grad = None
+        self.data = self.data + ensure_tensor(other).data
         return self
 
     def __isub__(self, other) -> 'Tensor':
-        self.data -= ensure_tensor(other).data
-        self.grad = None
+        self.data = self.data - ensure_tensor(other).data
         return self
 
     def __imul__(self, other) -> 'Tensor':
-        self.data *= ensure_tensor(other).data
-        self.grad = None
+        self.data = self.data * ensure_tensor(other).data
         return self
+
+    @property
+    def data(self) -> np.ndarray:
+        return self._data
+    
+    @data.setter
+    def data(self, new_data: np.ndarray) -> None:
+        self._data = new_data
+        self.grad = None
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data, dtype = np.float64))
