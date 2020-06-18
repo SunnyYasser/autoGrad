@@ -20,6 +20,6 @@ class TestTensorMatMul(unittest.TestCase):
         grad = Tensor([[-1], [-2], [-3]])
         t3.backward(grad)
 
-        np.testing.assert_array_equal(t1.grad.data,grad.data @ t2.data.T)
+        np.testing.assert_array_equal(t1.grad.data, grad.data @ t2.data.T)
 
         np.testing.assert_array_equal(t2.grad.data, t1.data.T @ grad.data)
