@@ -15,3 +15,4 @@ for i in range(100):
     print(i, sum_of_squares)
 
 
+#git test commit 
